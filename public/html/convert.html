@@ -96,7 +96,7 @@
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <span class="label label-default">DER TLV Decoder</span>
-                                            <textarea class="form-control" rows="2" placeholder="Insert your DER TLV" id="tlv_dertlv_input"></textarea>
+                                            <textarea class="form-control" rows="2" placeholder="Insert your DER TLV" id="tlv_dertlv_input" onkeypress="tlv_handler(event,tlv_dertlv_button)"></textarea>
                                             <button type="button" class="btn btn-default" id="tlv_dertlv_button" onclick="tlv_convert(this.id)">Decode</button>
                                             <textarea class="form-control" rows="10" placeholder="Decoded DER TLV" id="tlv_dertlv_output"></textarea>
                                         </div>

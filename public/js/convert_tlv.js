@@ -12,11 +12,18 @@ const NEXT = 'NEXT';
 
 const TAB = "    ";
 
+function tlv_handler(event,button){
+    if(event.keyCode === 13){
+         event.preventDefault();
+         tlv_convert(button.id);
+    }
+}
+
 function tlv_convert(button_id){
     if(button_id==TLV_BUTTON){
         var input = tlv_check_dertlv(document.getElementById(TLV_INPUT).value);
         if(input!=""){
-            document.getElementById(TLV_OUTPUT).value = tlv_decode_dertlv(input);
+            document.getElementById(TLV_OUTPUT).value = tlv_printTLV(tlv_decode_dertlv(input),0,true);
         }
     }
 }
@@ -34,8 +41,14 @@ function tlv_check_dertlv(input){
     return output;
 } 
 
+/*
+ *will decode the hex string into tlv object
+ *input : string hex contain tag, length and value
+ */
 function tlv_decode_dertlv(input){
-    
+    if(input==""){
+        return null;
+    }
     var tlv;
 
     //get root tag
@@ -49,11 +62,36 @@ function tlv_decode_dertlv(input){
     else{
         tlv = tlv_decode_dertlv_constructed(rootTag,input);
     }
+    return tlv;
 
-    return tlv_printTLV(tlv,0);
 }
 
-function tlv_printTLV(tlv,depth){
+/**
+ *will decode constructed type of tlv
+ *tag : the tag of the tlv
+ *input : the hex string contains tag, length, and value 
+ */
+function tlv_decode_dertlv_constructed(tag,input){
+    var lenInHex = tlv_getLength(tag,input);
+    var bufferNext = tlv_getNext(tag,lenInHex,input);
+    return {TAG:tag,LENGTH:lenInHex,VALUE:tlv_decode_dertlv(bufferNext),TYPE:PRIMITIVE,NEXT:tlv_decode_dertlv(bufferNext)};
+}
+
+/**
+ *will decode primitive type of tlv
+ *tag : the tag of the tlv
+ *input : the hex string contains tag, length, and value 
+ */
+function tlv_decode_dertlv_primitive(tag,input){
+    
+    var lenInHex = tlv_getLength(tag,input);
+    var bufferNext = tlv_getNext(tag,lenInHex,input);
+    var valInHex = tlv_getValue(tag,lenInHex,input,bufferNext);
+
+    return {TAG:tag,LENGTH:lenInHex,VALUE:valInHex,TYPE:PRIMITIVE,NEXT:tlv_decode_dertlv(bufferNext)};
+}
+
+function tlv_printTLV(tlv,depth,isRoot){
     //build the tab
     var output;
     var space = "";
@@ -68,30 +106,23 @@ function tlv_printTLV(tlv,depth){
     output = output + ' ' + tlv.LENGTH;
 
     //add the value
-    if(tlv.TYPE == PRIMITIVE){
+    if(tlv.TYPE == PRIMITIVE){ 
         output = output + ' ' + tlv.VALUE;
     }
     else{
-        output = output + '\n' + tlv_printTLV(tlv.VALUE,depth+1);
+        output = output + '\n' + tlv_printTLV(tlv.VALUE,depth+1,true);
         
     }
-    while(tlv.NEXT!=null){
-        tlv = tlv.NEXT;
-        output = output +'\n' + tlv_printTLV(tlv,depth);
+    if(isRoot){
+        while(tlv.NEXT!=null){
+            tlv = tlv.NEXT;
+            output = output +'\n' + tlv_printTLV(tlv,depth,false);
+        }
     }
-
-    return output;
     
-}
-function tlv_decode_dertlv_constructed(tag,input){
 
-}
-
-function tlv_decode_dertlv_primitive(tag,input){
+    return output;  
     
-    var lenInHex = tlv_getLength(tag,input);
-    var valInHex = tlv_getValue(tag,lenInHex,input);
-    return {TAG:tag,LENGTH:lenInHex,VALUE:valInHex,TYPE:PRIMITIVE,NEXT:null};
 }
 
 function tlv_getTag(input){
@@ -128,12 +159,18 @@ function tlv_getLength(tag,input){
     return lenInHex;
 }
 
-function tlv_getValue(tag,length,input){
+function tlv_getValue(tag,length,input,next){
     var buffer = input.substr(tag.length + length.length);
     var lenInInt = tlv_getLengthInt(length);
-    if(buffer.length/2 != lenInInt){
-        throw "Invalid data length";
+    if(next==""){
+        if(buffer.length/2 != lenInInt){
+            throw "Invalid data length";
+        }
     }
+    else{
+        return buffer.substr(0,length*2);
+    }
+       
     return buffer;
     
 }
@@ -158,4 +195,14 @@ function tlv_getLengthInt(length){
     }
     return lenInInt;
 }
+
+function tlv_getNext(tag,length,input){
+    var buffer = input.substr(tag.length + length.length);
+    var lenInInt = tlv_getLengthInt(length);
+    if(buffer.length/2 > lenInInt+2){
+        return buffer.substr(lenInInt*2);
+    }
+    return "";
+}
+
 
