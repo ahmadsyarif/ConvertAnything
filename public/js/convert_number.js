@@ -64,30 +64,32 @@ function number_checkHex(input){
     for(var i =0;i<temp.length;i++){
         if(! ((temp[i] >= '0' && temp[i]<='9') || (temp[i]>='A' && temp[i]<='F') )){
             alert('Hexadecimal Value must be 0-9 or A-F')
-            return false;
+            return "";
         }
     }
     return temp;
 }
 
 function number_checkOct(input){
-    for(var i=0;i<input.length;i++){
-        if(input[i]<'0' || input[i]>'7'){
+    var temp = input.replace(/\s/g,'');
+    for(var i=0;i<temp.length;i++){
+        if(temp[i]<'0' || temp[i]>'7'){
             alert('Octadecimal value only 0-7');
             return "";
         }
     }
-    return input;
+    return temp;
 }
 
 function number_checkBin(input){
-     for(var i=0;i<input.length;i++){
-        if(input[i]!='0' && input[i]!='1'){
+     var temp = input.replace(/\s/g,'');
+     for(var i=0;i<temp.length;i++){
+        if(temp[i]!='0' && temp[i]!='1'){
             alert('Binary value only 0-1');
             return "";
         }
     }
-    return input;
+    return temp;
 }
 //DECIMAL TO 
 
