@@ -14,6 +14,14 @@ http.createServer(function(request,response){
         githubPath = "https://raw.githubusercontent.com/ahmadsyarif/ConvertAnything/master/public/html/convert.html";
         console.log("copying convert.html from " + githubPath + " to " + filePath);
         
+        //delete any temporary file before start the process
+        fs.exists(filePath,function(exists){
+            if(exists){
+                console.log("delete temporary file");
+                fs.unlink(filePath);
+            }
+        });
+
         var file = fs.createWriteStream(filePath);
         var request = https.get(githubPath, function(responseFromGithub){
             console.log("response from github : " +response.statusCode);
